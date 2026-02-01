@@ -11,15 +11,13 @@
             Daftar Pembayaran Medical
         </h1>
 
-        {{-- FILTER --}}
+        {{-- FILTER (dummy dulu) --}}
         <select
             class="border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-gray-400">
             <option>Semua</option>
             <option>Belum Bayar</option>
             <option>Menunggu Verifikasi</option>
-            <option>Lunas (Siap Dijadwalkan)</option>
-            <option>Sudah Dijadwalkan</option>
-            <option>Selesai</option>
+            <option>Lunas</option>
         </select>
     </div>
 
@@ -27,11 +25,10 @@
     <div class="bg-white border rounded-xl overflow-hidden">
 
         {{-- HEADER TABLE --}}
-        <div class="grid grid-cols-9 bg-gray-100 text-sm font-semibold text-gray-700">
+        <div class="grid grid-cols-8 bg-gray-100 text-sm font-semibold text-gray-700">
             <div class="px-4 py-3">Nama</div>
             <div class="px-4 py-3">Program</div>
             <div class="px-4 py-3">Kelas</div>
-            <div class="px-4 py-3">Angkatan</div>
             <div class="px-4 py-3">Nominal</div>
             <div class="px-4 py-3 text-center">Bukti</div>
             <div class="px-4 py-3 text-center">Status Bayar</div>
@@ -39,99 +36,71 @@
             <div class="px-4 py-3 text-center">Aksi</div>
         </div>
 
-        {{-- DUMMY DATA --}}
-        @php
-            $data = [
-                [
-                    'nama' => 'Akbar Gunawan',
-                    'program' => 'Jepang',
-                    'kelas' => 'Jepang A',
-                    'angkatan' => '2026',
-                    'nominal' => 'Rp 750.000',
-                    'status_bayar' => 'menunggu',
-                    'status_medical' => 'belum_jadwal',
-                ],
-                [
-                    'nama' => 'Rizki Maulana',
-                    'program' => 'Korea',
-                    'kelas' => 'Korea A',
-                    'angkatan' => '2026',
-                    'nominal' => 'Rp 900.000',
-                    'status_bayar' => 'lunas',
-                    'status_medical' => 'siap_jadwal',
-                ],
-            ];
-        @endphp
+        {{-- DATA REAL --}}
+        @forelse ($pesertas as $peserta)
+        <div class="grid grid-cols-8 border-t text-sm items-center">
 
-        @foreach ($data as $item)
-        <div class="grid grid-cols-9 border-t text-sm items-center">
+            {{-- NAMA --}}
+            <div class="px-4 py-3 font-medium">
+                {{ $peserta->name }}
+            </div>
 
-            <div class="px-4 py-3 font-medium">{{ $item['nama'] }}</div>
-            <div class="px-4 py-3">{{ $item['program'] }}</div>
-            <div class="px-4 py-3">{{ $item['kelas'] }}</div>
-            <div class="px-4 py-3">{{ $item['angkatan'] }}</div>
-            <div class="px-4 py-3">{{ $item['nominal'] }}</div>
+            {{-- PROGRAM --}}
+            <div class="px-4 py-3 capitalize">
+                {{ $peserta->kelas->program ?? '-' }}
+            </div>
+
+            {{-- KELAS --}}
+            <div class="px-4 py-3">
+                {{ $peserta->kelas->nama_kelas ?? '-' }}
+            </div>
+
+            {{-- NOMINAL --}}
+            <div class="px-4 py-3 font-semibold">
+                Rp {{ number_format($peserta->nominal_medical ?? 0, 0, ',', '.') }}
+            </div>
 
             {{-- BUKTI --}}
             <div class="px-4 py-3 text-center">
-                <a href="#" class="text-blue-600 hover:underline">Lihat</a>
+                <span class="text-gray-400 italic text-xs">
+                    Belum Upload
+                </span>
             </div>
 
             {{-- STATUS BAYAR --}}
             <div class="px-4 py-3 text-center">
-                @if ($item['status_bayar'] === 'lunas')
-                    <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
-                        Lunas
-                    </span>
-                @else
-                    <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700">
-                        Menunggu
-                    </span>
-                @endif
+                <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700">
+                    Belum Bayar
+                </span>
             </div>
 
             {{-- STATUS MEDICAL --}}
             <div class="px-4 py-3 text-center">
-                @if ($item['status_medical'] === 'siap_jadwal')
-                    <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">
-                        Siap Dijadwalkan
-                    </span>
-                @else
-                    <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
-                        Belum Dijadwalkan
-                    </span>
-                @endif
+                <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
+                    Belum Dijadwalkan
+                </span>
             </div>
 
             {{-- AKSI --}}
-            <div class="px-4 py-3 text-center space-x-2">
-
-                @if ($item['status_bayar'] === 'menunggu')
-                    <button class="px-3 py-1 text-xs bg-green-600 text-white rounded">
-                        Terima
-                    </button>
-                    <button class="px-3 py-1 text-xs bg-red-600 text-white rounded">
-                        Tolak
-                    </button>
-                @elseif ($item['status_medical'] === 'siap_jadwal')
-                    <a href="#"
-                       class="px-3 py-1 text-xs bg-blue-600 text-white rounded">
-                        Atur Jadwal
-                    </a>
-                @else
-                    <span class="text-xs text-gray-400 italic">—</span>
-                @endif
-
+            <div class="px-4 py-3 text-center">
+                <span class="text-xs text-gray-400 italic">
+                    —
+                </span>
             </div>
 
         </div>
-        @endforeach
+        @empty
+        <div class="p-6 text-center text-sm text-gray-500">
+            Belum ada peserta yang lolos registrasi.
+        </div>
+        @endforelse
 
     </div>
 
     {{-- NOTE --}}
     <div class="bg-yellow-50 border border-yellow-200 rounded p-4 text-sm text-yellow-700">
-        ⚠️ Hanya peserta dengan pembayaran <b>lunas</b> yang dapat dijadwalkan medical.
+        ⚠️ Nominal pembayaran diambil dari menu <b>Atur Nominal Medical</b>.
+        Hanya peserta dengan status <b>diterima</b> yang muncul di halaman ini.
     </div>
 
 </div>

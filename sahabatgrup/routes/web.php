@@ -3,6 +3,8 @@ use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\CalonSiswaController;
 use App\Http\Controllers\UserSiswaAuthController;
 use App\Http\Controllers\User\DashboardController;
+use App\Http\Controllers\Admin\Medical\DaftarPembayaranController;
+use App\Http\Controllers\Admin\Medical\MedicalNominalController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -159,20 +161,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::prefix('medical')->name('medical.')->group(function () {
 
         // 📄 Daftar Pembayaran Medical
-        Route::get('/daftar-pembayaran', function () {
-            return view('admin.medical.daftar-pembayaran');
-        })->name('daftar-pembayaran');
-        
-          // 💰 Atur Nominal Medical
-        Route::get('/atur-nominal', function () {
-            return view('admin.medical.atur-nominal');
-        })->name('atur-nominal');
+        Route::get('/daftar-pembayaran', 
+            [DaftarPembayaranController::class, 'index']
+        )->name('daftar-pembayaran');
+
+        // 💰 Atur Nominal Medical
+        Route::get('/atur-nominal', 
+            [MedicalNominalController::class, 'index']
+        )->name('atur-nominal');
+
+        Route::post('/atur-nominal', 
+            [MedicalNominalController::class, 'store']
+        )->name('atur-nominal.store');
 
     });
 
-    
-
 });
-
-
 
