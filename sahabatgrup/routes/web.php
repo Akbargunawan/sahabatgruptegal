@@ -5,6 +5,8 @@ use App\Http\Controllers\UserSiswaAuthController;
 use App\Http\Controllers\User\DashboardController;
 use App\Http\Controllers\Admin\Medical\DaftarPembayaranController;
 use App\Http\Controllers\Admin\Medical\MedicalNominalController;
+use App\Http\Controllers\MidtransCallbackController;
+use App\Http\Controllers\User\MedicalPaymentController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -17,9 +19,9 @@ Route::get('/', function () {
 | AUTH SISWA
 |--------------------------------------------------------------------------
 */
-Route::get('/login-siswa', function () {
-    return view('usersiswa.login');
-})->name('login.siswa');
+Route::get('/login-siswa', [UserSiswaAuthController::class, 'loginForm'])
+    ->name('login.siswa'); // pakai nama route ini
+
 
 Route::post('/login-siswa', [UserSiswaAuthController::class, 'login'])
     ->name('login.siswa.submit');
@@ -87,10 +89,17 @@ Route::middleware('siswa.auth')->group(function () {
 });
 
 // MEDICAL
-// PEMBAYARAN
-Route::get('/siswa/medical/pembayaran', function () {
-    return view('usersiswa.medical.pembayaran');
-})->name('user.medical.pembayaran');
+// MEDICAL PAYMENT
+Route::middleware('siswa.auth')->group(function () {
+    Route::get('/siswa/medical/pembayaran', [MedicalPaymentController::class, 'index'])
+        ->name('user.medical.pembayaran');
+
+    Route::post('/siswa/medical/pembayaran/pay', [MedicalPaymentController::class, 'pay'])
+        ->name('user.medical.pembayaran.pay');
+});
+
+
+Route::post('/midtrans/callback', [MidtransCallbackController::class, 'handle']);
 
 // JADWAL MEDICAL
 Route::get('/siswa/medical/jadwal', function () {
@@ -155,15 +164,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
 | ADMIN - MEDICAL
 |--------------------------------------------------------------------------
 */
-
 Route::prefix('admin')->name('admin.')->group(function () {
-
     Route::prefix('medical')->name('medical.')->group(function () {
 
         // 📄 Daftar Pembayaran Medical
         Route::get('/daftar-pembayaran', 
             [DaftarPembayaranController::class, 'index']
         )->name('daftar-pembayaran');
+
+        // MARK AS PAID / LUNASKAN
+        Route::post('/daftar-pembayaran/lunaskan/{id}', 
+            [DaftarPembayaranController::class, 'lunaskanPayment']
+        )->name('daftar-pembayaran.lunaskan');
 
         // 💰 Atur Nominal Medical
         Route::get('/atur-nominal', 
@@ -175,6 +187,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         )->name('atur-nominal.store');
 
     });
-
 });
+
 

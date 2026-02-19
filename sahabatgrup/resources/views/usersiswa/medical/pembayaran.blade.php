@@ -18,45 +18,35 @@
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-gray-600 text-sm">Total Biaya Medical</p>
-                <p class="text-2xl font-bold text-gray-800">Rp 750.000</p>
+                <p class="text-2xl font-bold text-gray-800">
+                    {{-- Jika $payment null, pakai nominal dari controller --}}
+                    Rp {{ number_format($payment->amount ?? $nominal, 0, ',', '.') }}
+                </p>
             </div>
 
-            <span class="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded-full">
-                Menunggu Pembayaran
+            <span class="px-3 py-1 text-xs rounded 
+                @if(isset($payment) && $payment->status == 'lunas') bg-green-100 text-green-700
+                @elseif(isset($payment) && $payment->status == 'pending') bg-yellow-100 text-yellow-700
+                @elseif(isset($payment) && $payment->status == 'gagal') bg-red-100 text-red-700
+                @else bg-gray-100 text-gray-500
+                @endif">
+                @if(isset($payment) && $payment->status == 'lunas') Lunas
+                @elseif(isset($payment) && $payment->status == 'pending') Menunggu Pembayaran
+                @elseif(isset($payment) && $payment->status == 'gagal') Gagal
+                @else Belum Ada Pembayaran
+                @endif
             </span>
         </div>
 
         <p class="text-sm text-gray-500 mt-4">
-            Pembayaran dilakukan secara otomatis melalui payment gateway.
+            Pembayaran dilakukan melalui payment gateway resmi (sandbox).
         </p>
-    </div>
-
-    {{-- METODE PEMBAYARAN --}}
-    <div class="bg-white rounded-xl shadow-sm border p-5 space-y-4">
-        <h2 class="text-blue-700 font-semibold">Pilih Metode Pembayaran</h2>
-
-        @php
-            $methods = [
-                ['icon' => '💳', 'name' => 'Virtual Account'],
-                ['icon' => '📱', 'name' => 'E-Wallet'],
-                ['icon' => '🔳', 'name' => 'QRIS'],
-            ];
-        @endphp
-
-        @foreach ($methods as $method)
-        <label class="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
-            <div class="flex items-center gap-3">
-                <span class="text-xl">{{ $method['icon'] }}</span>
-                <span class="font-medium text-gray-800">{{ $method['name'] }}</span>
-            </div>
-            <input type="radio" name="payment_method" class="accent-blue-600">
-        </label>
-        @endforeach
     </div>
 
     {{-- ACTION --}}
     <div class="bg-white rounded-xl shadow-sm border p-5">
         <button
+            id="pay-button"
             class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg font-semibold transition">
             Bayar Sekarang
         </button>
@@ -68,8 +58,45 @@
 
     {{-- NOTE --}}
     <div class="bg-blue-50 border border-blue-200 rounded p-4 text-sm text-blue-700">
-        ℹ️ Status pembayaran akan diperbarui otomatis setelah transaksi berhasil.
+        ℹ️ Setelah pembayaran berhasil, status akan diperbarui otomatis dan admin
+        akan menjadwalkan medical.
     </div>
 
 </div>
+
+{{-- MIDTRANS SNAP --}}
+<script src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const payButton = document.getElementById('pay-button');
+
+    payButton.addEventListener('click', function () {
+        fetch("{{ route('user.medical.pembayaran.pay') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({ 
+                // Jika $payment belum ada, kirim null atau 0
+                payment_id: {{ $payment->id ?? 'null' }}
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Response dari server:", data); 
+            if (data.snap_token) {
+                snap.pay(data.snap_token);
+            } else if(data.error) {
+                alert("Gagal generate Snap token: " + data.message);
+            } else {
+                alert("Terjadi kesalahan. Cek console.");
+            }
+        })
+        .catch(err => console.error(err));
+    });
+});
+</script>
 @endsection

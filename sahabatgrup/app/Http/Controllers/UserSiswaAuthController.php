@@ -64,6 +64,10 @@ class UserSiswaAuthController extends Controller
         ->with('success', 'Registrasi berhasil');
 }
 
+public function loginForm()
+{
+    return view('usersiswa.login');
+}
 
   
 

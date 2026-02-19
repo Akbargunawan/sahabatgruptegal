@@ -69,10 +69,23 @@
 
             {{-- STATUS BAYAR --}}
             <div class="px-4 py-3 text-center">
-                <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700">
-                    Belum Bayar
-                </span>
+                @if($peserta->payment)
+                    @if($peserta->payment->status == 'pending')
+                        <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700">
+                            Menunggu Verifikasi
+                        </span>
+                    @elseif($peserta->payment->status == 'lunas')
+                        <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                            Lunas
+                        </span>
+                    @endif
+                @else
+                    <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
+                        Belum Bayar
+                    </span>
+                @endif
             </div>
+
 
             {{-- STATUS MEDICAL --}}
             <div class="px-4 py-3 text-center">
@@ -83,10 +96,20 @@
 
             {{-- AKSI --}}
             <div class="px-4 py-3 text-center">
-                <span class="text-xs text-gray-400 italic">
-                    —
-                </span>
+                @if($peserta->payment && $peserta->payment->status == 'pending')
+                    <form action="{{ route('admin.medical.daftar-pembayaran.lunaskan', $peserta->payment->id) }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                                class="px-2 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700">
+                            Lunaskan
+                        </button>
+                    </form>
+                @else
+                    <span class="text-xs text-gray-400 italic">—</span>
+                @endif
             </div>
+
+
 
         </div>
         @empty
@@ -105,3 +128,29 @@
 
 </div>
 @endsection
+
+<script>
+document.querySelectorAll('.lunaskan-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const paymentId = this.dataset.id;
+        if (!confirm('Yakin ingin melunaskan pembayaran ini?')) return;
+
+        fetch(`/admin/medical/daftar-pembayaran/lunaskan/${paymentId}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
+            },
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload(); // reload supaya status di tabel berubah
+            } else {
+                alert('Gagal melunaskan pembayaran');
+            }
+        });
+    });
+});
+</script>

@@ -39,5 +39,10 @@ class CalonSiswa extends Model
     return $this->belongsTo(\App\Models\Kelas::class);
 }
 
+public function medicalPayment()
+{
+    return $this->hasOne(MedicalPayment::class, 'calon_siswa_id');
+}
+
 
 }
