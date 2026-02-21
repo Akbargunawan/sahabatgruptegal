@@ -13,10 +13,16 @@
         <div class="mt-2 border-b border-gray-300"></div>
     </div>
 
+    {{-- NOTIFIKASI --}}
+    @if(session('success'))
+        <div class="mb-4 p-3 rounded bg-green-100 text-green-700 text-sm">
+            {{ session('success') }}
+        </div>
+    @endif
+
     {{-- SEARCH & FILTER --}}
     <form method="GET" class="flex items-center gap-3 mb-4">
 
-        {{-- Search --}}
         <input
             type="text"
             name="search"
@@ -26,7 +32,6 @@
                    focus:outline-none focus:ring-1 focus:ring-gray-400"
         >
 
-        {{-- Filter Status --}}
         <select
             name="status"
             class="h-9 border rounded px-3 text-sm
@@ -43,7 +48,6 @@
             </option>
         </select>
 
-        {{-- Button Cari --}}
         <button
             type="submit"
             class="h-9 px-4 bg-gray-700 text-white rounded text-sm
@@ -51,13 +55,11 @@
             Cari
         </button>
 
-        {{-- Reset --}}
         <a href="{{ route('admin.calon-siswa.index') }}"
            class="h-9 px-4 bg-gray-200 rounded text-sm flex items-center
                   hover:bg-gray-300 transition">
             Reset
         </a>
-
     </form>
 
     {{-- TABLE --}}
@@ -68,18 +70,37 @@
                     <th class="p-3 w-12 text-center">No</th>
                     <th class="text-left p-3">Nama</th>
                     <th class="text-left p-3">Email</th>
+                    <th class="text-left p-3">Kategori Kelas</th> {{-- TAMBAHAN --}}
                     <th class="p-3 text-center">Status</th>
-                    <th class="p-3 w-32 text-center">Aksi</th>
+                    <th class="p-3 w-40 text-center">Aksi</th>
                 </tr>
             </thead>
 
-           <tbody>
+            <tbody>
                 @forelse ($calonSiswa as $index => $siswa)
                 <tr class="border-t hover:bg-gray-50 transition">
                     <td class="p-3 text-center">{{ $index + 1 }}</td>
-                    <td>{{ $siswa->name }}</td>
-                    <td>{{ $siswa->email }}</td>
-                    <td class="text-center">
+                    <td class="p-3">{{ $siswa->name }}</td>
+                    <td class="p-3">{{ $siswa->email }}</td>
+
+                    {{-- KATEGORI KELAS --}}
+                    <td class="p-3">
+                        @php
+                            $kelasColors = [
+                                'reguler' => 'bg-blue-100 text-blue-700',
+                                'intensif' => 'bg-purple-100 text-purple-700',
+                                'private' => 'bg-indigo-100 text-indigo-700',
+                            ];
+                        @endphp
+
+                        <span class="px-3 py-1 rounded-full text-xs 
+                            {{ $kelasColors[$siswa->kategori_kelas] ?? 'bg-gray-100 text-gray-600' }}">
+                            {{ ucfirst($siswa->kategori_kelas ?? '-') }}
+                        </span>
+                    </td>
+
+                    {{-- STATUS --}}
+                    <td class="p-3 text-center">
                         @if ($siswa->status === 'pending')
                             <span class="px-3 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">
                                 Pending
@@ -88,28 +109,49 @@
                             <span class="px-3 py-1 rounded-full text-xs bg-green-100 text-green-700">
                                 Diterima
                             </span>
-                        @else
+                        @elseif ($siswa->status === 'ditolak')
                             <span class="px-3 py-1 rounded-full text-xs bg-red-100 text-red-700">
                                 Ditolak
                             </span>
+                        @else
+                            <span class="px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600">
+                                -
+                            </span>
                         @endif
                     </td>
-                    <td class="text-center">
-                        <a href="{{ route('admin.calon-siswa.show', $siswa->id) }}"
-                        class="px-3 py-1 border rounded text-xs hover:bg-gray-100">
-                            Detail
-                        </a>
+
+                    {{-- AKSI --}}
+                    <td class="p-3 text-center">
+                        <div class="flex justify-center gap-2">
+
+                            <a href="{{ route('admin.calon-siswa.show', $siswa->id) }}"
+                               class="px-3 py-1 border rounded text-xs hover:bg-gray-100">
+                                Detail
+                            </a>
+
+                            <form action="{{ route('admin.calon-siswa.destroy', $siswa->id) }}"
+                                  method="POST"
+                                  onsubmit="return confirm('Yakin ingin menghapus data ini?')">
+                                @csrf
+                                @method('DELETE')
+
+                                <button type="submit"
+                                    class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition">
+                                    Hapus
+                                </button>
+                            </form>
+
+                        </div>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="text-center p-6 text-gray-500">
+                    <td colspan="6" class="text-center p-6 text-gray-500">
                         Data calon siswa kosong
                     </td>
                 </tr>
                 @endforelse
-                </tbody>
-
+            </tbody>
         </table>
     </div>
 

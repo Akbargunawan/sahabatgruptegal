@@ -31,24 +31,24 @@ class CalonSiswaController extends Controller
 
 
    public function terima(Request $request, $id)
-{
-    $request->validate([
-        'kelas_id' => 'required|exists:kelas,id',
-    ]);
+    {
+        $request->validate([
+            'kelas_id' => 'required|exists:kelas,id',
+        ]);
 
-    $siswa = CalonSiswa::findOrFail($id);
+        $siswa = CalonSiswa::findOrFail($id);
 
-    $siswa->update([
-        'status' => 'diterima',
-        'kelas_id' => $request->kelas_id,
-    ]);
+        $siswa->update([
+            'status' => 'diterima',
+            'kelas_id' => $request->kelas_id,
+        ]);
 
-    // tambah jumlah terisi
-    Kelas::where('id', $request->kelas_id)->increment('terisi');
+        // tambah jumlah terisi
+        Kelas::where('id', $request->kelas_id)->increment('terisi');
 
-    return redirect()->route('admin.calon-siswa.index')
-        ->with('success', 'Siswa diterima dan kelas ditentukan');
-}
+        return redirect()->route('admin.calon-siswa.index')
+            ->with('success', 'Siswa diterima dan kelas ditentukan');
+    }
 
 
     public function tolak($id)
@@ -62,13 +62,29 @@ class CalonSiswaController extends Controller
     }
 
    public function show($id)
+    {
+        $siswa = CalonSiswa::findOrFail($id);
+
+        // ambil kelas aktif
+        $kelasList = Kelas::where('status', 'aktif')->get();
+
+        return view('admin.calon-siswa.show', compact('siswa', 'kelasList'));
+    }
+
+   public function destroy($id)
 {
     $siswa = CalonSiswa::findOrFail($id);
 
-    // ambil kelas aktif
-    $kelasList = Kelas::where('status', 'aktif')->get();
+    // Jika siswa sudah diterima dan punya kelas
+    if ($siswa->status === 'diterima' && $siswa->kelas_id) {
+        Kelas::where('id', $siswa->kelas_id)->decrement('terisi');
+    }
 
-    return view('admin.calon-siswa.show', compact('siswa', 'kelasList'));
+    $siswa->delete();
+
+    return redirect()->route('admin.calon-siswa.index')
+        ->with('success', 'Data calon siswa berhasil dihapus');
 }
+
 
 }

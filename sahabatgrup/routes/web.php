@@ -156,6 +156,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::post('/calon-siswa/{id}/tolak', [CalonSiswaController::class, 'tolak'])
         ->name('calon-siswa.tolak');
+
+    // ✅ TAMBAHKAN INI
+    Route::delete('/calon-siswa/{id}', [CalonSiswaController::class, 'destroy'])
+        ->name('calon-siswa.destroy');
 });
 
 
