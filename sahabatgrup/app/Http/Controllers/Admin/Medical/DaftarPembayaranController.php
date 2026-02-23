@@ -4,26 +4,29 @@ namespace App\Http\Controllers\Admin\Medical;
 
 use App\Http\Controllers\Controller;
 use App\Models\CalonSiswa;
+use Illuminate\Http\Request;
 use App\Models\MedicalNominal;
 use App\Models\MedicalPayment;
 
 class DaftarPembayaranController extends Controller
 {
     // Tampilkan daftar pembayaran
-    public function index()
+   public function index()
     {
-        // Ambil siswa yang SUDAH DITERIMA
-        $pesertas = CalonSiswa::where('status', 'diterima')->get();
+        // Ambil siswa yang SUDAH DITERIMA + relasi payment
+        $pesertas = CalonSiswa::with('medicalPayment')
+            ->where('status', 'diterima')
+            ->get();
 
-        // Ambil semua nominal medical (1 query)
+        // Ambil semua nominal medical
         $nominals = MedicalNominal::pluck('nominal', 'program');
 
-        // Sisipkan nominal dan cek payment
         $pesertas->map(function ($siswa) use ($nominals) {
+
             $siswa->nominal_medical = $nominals[$siswa->kategori_kelas] ?? 0;
 
-            // Ambil payment record jika ada (user sudah klik Bayar Sekarang)
-            $siswa->payment = $siswa->medicalPayment ?? null;
+            // langsung ambil dari relasi
+            $siswa->payment = $siswa->medicalPayment;
 
             return $siswa;
         });
@@ -47,5 +50,24 @@ class DaftarPembayaranController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Pembayaran berhasil dilunaskan.');
+    }
+
+    public function uploadJadwal(Request $request, $id)
+    {
+        $request->validate([
+            'jadwal_file' => 'required|mimes:pdf|max:2048'
+        ]);
+
+        $payment = MedicalPayment::findOrFail($id);
+
+        $filePath = $request->file('jadwal_file')
+            ->store('jadwal-medical', 'public');
+
+        $payment->update([
+            'jadwal_file' => $filePath,
+            'medical_status' => 'dijadwalkan'
+        ]);
+
+        return back()->with('success', 'Jadwal medical berhasil diupload');
     }
 }

@@ -17,10 +17,14 @@ class MedicalPayment extends Model
         'amount',
         'payment_type',
         'status',
-        'jadwal_medical',
+
+        // 🔥 TAMBAHKAN INI
+        'jadwal_file',
+        'medical_status',
+        'hasil_file',
+        'hasil_status',
     ];
 
-    // Relasi ke calon siswa (sesuaikan nama model calon siswa)
     public function calonSiswa()
     {
         return $this->belongsTo(\App\Models\CalonSiswa::class, 'calon_siswa_id');

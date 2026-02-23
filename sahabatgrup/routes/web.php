@@ -102,9 +102,20 @@ Route::middleware('siswa.auth')->group(function () {
 Route::post('/midtrans/callback', [MidtransCallbackController::class, 'handle']);
 
 // JADWAL MEDICAL
-Route::get('/siswa/medical/jadwal', function () {
-    return view('usersiswa.medical.jadwal');
-})->name('user.medical.jadwal');
+Route::middleware('siswa.auth')->group(function () {
+
+    Route::get('/siswa/medical/jadwal', function () {
+
+        $user = session('siswa');
+
+        $payment = \App\Models\MedicalPayment::where('calon_siswa_id', $user->id)
+            ->first();
+
+        return view('usersiswa.medical.jadwal', compact('payment'));
+
+    })->name('user.medical.jadwal');
+
+});
 
 // HASIL MEDICAL
 Route::get('/siswa/medical/hasil', function () {
@@ -189,6 +200,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/atur-nominal', 
             [MedicalNominalController::class, 'store']
         )->name('atur-nominal.store');
+
+         // ✅ TAMBAHKAN DI SINI
+       Route::post('/upload-jadwal/{id}',
+            [DaftarPembayaranController::class, 'uploadJadwal']
+        )->name('upload-jadwal');
 
     });
 });
